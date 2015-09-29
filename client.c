@@ -58,26 +58,34 @@ int main(int argc, char *argv[])
 		exit(1) ;
 	}
 
-	char *buf;
-	buf=(char *)malloc(10*sizeof(char));
-	buf=getlogin();
+	char *buf; 
+	buf=(char *)malloc(10*sizeof(char)); 
+	buf=getlogin(); 
+	
+	char newpath[30]; 
+	strcpy(newpath, "/home/"); 
+	strcat(newpath, buf); 
+	strcat(newpath, "/client_file/"); 
 
-	char newpath[30];
-	strcpy(newpath, "/home/");
-	strcat(newpath, buf);
-	strcat(newpath, "/client_file/");
+	
+	struct stat st; 
+	if(stat(newpath, &st) == -1){ 
+	mkdir(newpath, 0700); }	
 
+	
+	//recv(sockfd,buffer,256,0);
 
-	struct stat st;
-	if(stat(newpath, &st) == -1){
-	mkdir(newpath, 0700); }
-
-
-	printf("\n Please enter choice [type /q to quit]\n");
-
+	//printf("%s\n",buffer);
+	//printf("\n1)Create file\n");
+	//printf("\n2)Read file\n");
+	//printf("\n3)Delete\n");
+	//printf("\nEnter (1,2,3):\n");
+	
+	printf("\n Please enter choice ::\n");
+	
 	bzero(buffer, sizeof(buffer));
 	recv(sockfd, buffer, 1025, 0);
-	printf("\n%s\n", buffer);
+	printf("\n%s", buffer);	
 	gets(buffer);
 	send(sockfd, buffer, 1025, 0);
 
@@ -85,9 +93,9 @@ int main(int argc, char *argv[])
 	{
 		char tempname[25];
 		char cli_file[25];
-		strcpy(cli_file, "/home/");
-		strcat(cli_file, buf);
-		strcat(cli_file, "/client_file/");
+		strcpy(cli_file, "/home/"); 
+		strcat(cli_file, buf); 
+		strcat(cli_file, "/client_file/"); 
 
 		printf("Please input the file name:");
 		scanf("%s",tempname);
@@ -97,7 +105,7 @@ int main(int argc, char *argv[])
 
 		//cli_file = file path,temp= filename
 		strcat(cli_file,tempname);
-
+	
 		FILE *fp;
 		fp= fopen(cli_file, "wb+");
 		if(NULL == fp)
@@ -105,6 +113,9 @@ int main(int argc, char *argv[])
 			printf("Error");
 		}
 
+		//bzero(buffer, sizeof(buffer));
+		//n = recv(sockfd, buffer, 1025, 0 );
+		//fwrite(buffer,1, n,fp);
 		fclose(fp);
 		exit(1);
 	}
@@ -115,36 +126,36 @@ int main(int argc, char *argv[])
 		struct dirent *ent;
 
 		char directory_name[30];
-   		strcpy(directory_name, "/home/");
-    		strcat(directory_name, buf);
+   		strcpy(directory_name, "/home/"); 
+    		strcat(directory_name, buf); 
     		strcat(directory_name, "/client_file/");
 
 		if ((dir = opendir (directory_name)) != NULL) {
-
+		
 		printf("\n[List of files in Client Directory]\n");
-  		// print all the files and directories within directory
+  		// print all the files and directories within directory 
   		while ((ent = readdir (dir)) != NULL) {
 
 		printf("%s\n", ent->d_name);    }
 
  		closedir (dir);
 	}
+		
 
-
-
+		
 		exit(1);
 }
 
 	else if(!strcmp(buffer,"3"))
 	{
-
+		
 		printf("Enter a file name to delete:");
 		scanf("%s", delete);
-
+		
 		char cli_file[25];
-		strcpy(cli_file, "/home/");
-		strcat(cli_file, buf);
-		strcat(cli_file, "/client_file/");
+		strcpy(cli_file, "/home/"); 
+		strcat(cli_file, buf); 
+		strcat(cli_file, "/client_file/"); 
 		strcat(cli_file,delete);
 
 			FILE *fp;
@@ -167,12 +178,12 @@ int main(int argc, char *argv[])
 
 	else if(!strcmp(buffer,"4"))
 	{
-
+		
 		printf("Enter a file name to upload:");
-				scanf("%s", upload);
+				scanf("%s", upload); 
 				strcat(newpath, upload);
 				send(sockfd,upload,1025,0);
-
+		
 		//read file
 		FILE *fp=fopen(newpath,"rb");
 		if(fp==NULL)
@@ -200,41 +211,51 @@ int main(int argc, char *argv[])
 
 	else if(!strcmp(buffer,"5"))
 	{
-
-
-
-
-
+				
+				
+				/*char file_name[30];
+				strcpy(file_name, "/home/"); 
+				strcat(file_name, buf); 
+				strcat(file_name, "/serverFile/");*/
+				
+				
 				printf("Enter a file name to download:");
-				scanf("%s", dload);
+				scanf("%s", dload); 
 				strcat(newpath, dload);
 				send(sockfd,dload,1025,0);
 
-				FILE *fp;
-		   	 	fp = fopen(newpath,"wb+");
 				int length=0;
-				bzero( buffer, sizeof(buffer));
+				length=recv(sockfd,buffer,1025,0);
 
-
-				while(length=recv(sockfd,buffer,1025,0))
-					{
+				if(strcmp(buffer,"N")){
+				FILE *fp;
+		   	 	fp = fopen(newpath,"wb+"); 
+				
+				//bzero( buffer, sizeof(buffer));
+				
+				while(length)
+					{	
 							if(length<0)
 							{
 								perror("recv");
-								exit(0);
+								exit(1);
 							}
 						int writelen=fwrite(buffer,sizeof(char),length,fp);
-						if(writelen<length)
+						
+						if(writelen<=length)
 						{
-							perror("write");
-							exit(0);
+							//perror("write");
+							fclose(fp);
+							printf("Successful Received!\n");
+							exit(1);
 						}
 						bzero( buffer, sizeof(buffer));
 					}
-
-				fclose(fp);
-				printf("Successful Received!\n");
+				
 				exit(0);
+				}else{
+				  printf("File Not Found!!\n");
+				}
 	}
 
 
@@ -250,4 +271,5 @@ void catchin(int signo){
 	printf("\n[ Interrupt signal!!!!]\n");
 	exit(0);
 }
+
 
