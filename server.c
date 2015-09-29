@@ -1,3 +1,7 @@
+/*
+	HEE CHEE KEONG  1122700902
+	GAN CHERN HOANG 1112703704
+*/
 #include "inet.h"
 
 int main(int argc, char *argv[])
